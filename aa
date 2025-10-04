@@ -1,0 +1,547 @@
+repeat task.wait()until game:IsLoaded()
+
+getgenv().ConfigBF={
+TEAM="Pirates",
+}
+
+local a=getgenv().ConfigBF
+
+repeat task.wait()until game.Players.LocalPlayer
+repeat task.wait()until game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+if game:GetService("Players").LocalPlayer.Team==nil then
+repeat task.wait()
+for b,c in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetChildren())do
+if string.find(c.Name,"Main")then
+c.ChooseTeam.Container[a.TEAM].Frame.TextButton.Size=UDim2.new(0,10000,0,10000)
+c.ChooseTeam.Container[a.TEAM].Frame.TextButton.Position=UDim2.new(-4,0,-5,0)
+c.ChooseTeam.Container[a.TEAM].Frame.TextButton.BackgroundTransparency=1
+task.wait(.5)
+game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game,1);task.wait(0.05)
+game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game,1);task.wait(0.05)
+end
+end
+until game.Players.LocalPlayer.Team~=nil and game:IsLoaded()
+task.wait(3)
+end
+
+local b=setmetatable({},{
+__index=function(b,c)
+local d,e=pcall(function()
+return cloneref((game:GetService(c)))
+end)
+if d and e then
+rawset(b,c,e)
+return e
+end
+return nil
+end
+})
+
+local c=b.ReplicatedStorage
+local d=b.Players
+local e=d.LocalPlayer
+
+local f=require(c.Modules.Net)
+
+task.spawn(function()
+e.PlayerScripts:WaitForChild('NewIslandLOD',9999):Destroy()
+game:GetService("Players")
+e.PlayerScripts:WaitForChild('IslandLOD',9999):Destroy()
+end)
+
+local g
+g={
+cache={},
+loadModule=function(h)
+if not g.cache[h]then
+g.cache[h]={
+module=g[h](),
+}
+end
+
+return g.cache[h].module
+end
+}
+
+
+function g.FastAttackHandler()
+local h={}
+
+function h.GetAllBladeHits()
+local i={}
+for j,k in workspace.Enemies:GetChildren()do
+if k:FindFirstChild('Humanoid')and k:FindFirstChild('HumanoidRootPart')and k.Humanoid.Health>0
+and(k.HumanoidRootPart.Position-e.Character.HumanoidRootPart.Position).Magnitude<=65 then
+table.insert(i,k)
+end
+end
+return i
+end
+
+function h.GetPlayerHit()
+local i={}
+for j,k in workspace.Characters:GetChildren()do
+if k.Name==e.Name then
+continue
+end
+
+if k:FindFirstChild('Humanoid')and k:FindFirstChild('HumanoidRootPart')and k.Humanoid.Health>0
+and(k.HumanoidRootPart.Position-e.Character.HumanoidRootPart.Position).Magnitude<=65 then
+table.insert(i,k)
+end
+end
+return i
+end
+
+local i=c.Modules.Net
+
+local j=require(i):RemoteEvent('RegisterAttack',true)
+local k=require(i):RemoteEvent('RegisterHit',true)
+
+function h:Attack()
+
+
+local l={}
+for m,n in h.GetAllBladeHits()do
+table.insert(l,n)
+end
+
+for m,n in h.GetPlayerHit()do
+table.insert(l,n)
+end
+
+if#l==0 then
+
+return
+end
+
+local m={
+[1]=nil;
+[2]={},
+[4]='078da341'
+}
+for n,o in l do
+
+
+j:FireServer(0)
+if not m[1]then
+m[1]=o.Head
+end
+table.insert(m[2],{
+[1]=o,
+[2]=o.HumanoidRootPart
+})
+table.insert(m[2],o)
+end
+
+
+k:FireServer(unpack(m))
+end
+
+function h.Run()
+task.spawn(function()
+while task.wait(0.05)do
+pcall(function()
+h:Attack()
+end)
+end
+end)
+end
+
+return h
+end
+
+function g.FuncHandler()
+local h={}
+
+b.RunService.Stepped:Connect(function()
+if e.Character then
+for i,j in pairs(e.Character:GetDescendants())do
+if j:IsA("BasePart")and j.CanCollide==true then
+j.CanCollide=false
+end
+end
+end
+end)
+
+function h.EquipTool(i)
+for j,k in e.Backpack:GetChildren()do
+if k:IsA('Tool')and k.Name~='Tool'and(k.Name==tostring(i)or k.ToolTip==i)then
+e.Character:WaitForChild('Humanoid'):EquipTool(k)
+break
+end
+end
+end
+
+function h.FindTool(i)
+return e.Character:FindFirstChild(i)or e.Backpack:FindFirstChild(i)
+end
+
+function h.FindNPC(i)
+return workspace.NPCs:FindFirstChild(i)or c.NPCs:FindFirstChild(i)
+end
+
+function h.FindMob(i)
+return workspace.Enemies:FindFirstChild(i)or b.ReplicatedStorage:FindFirstChild(i)
+end
+
+function h.SortCFrame(i)
+return i and i:FindFirstChild('HumanoidRootPart')and math.floor(h.CaculateDistance(i.HumanoidRootPart.CFrame))
+end
+
+function h.ConvertData(i,j)
+return i.new(j.x,j.y,j.z)
+end
+
+function h.RoundVector3Down(i)
+return Vector3.new(math.floor(i.X/10)*10,math.floor(i.Y/10)*10,math.floor(i.Z/10)*10)
+end
+
+function h.CaculateDistance(i,j)
+if not j then
+j=e.Character:GetPrimaryPartCFrame()
+end
+
+i,j=h.ConvertData(Vector3,i),h.ConvertData(Vector3,j)
+
+return(i-j).Magnitude
+end
+
+function h.TweenToPostion(i)
+if not i then
+return
+end
+
+i=typeof(i)~='CFrame'and h.ConvertData(CFrame,i)or i
+
+if getgenv().genvTweenInstance then
+pcall(function()
+getgenv().TweenInstance:Cancel()
+end)
+end
+
+local j=e.Character:WaitForChild('Head')
+if not j:FindFirstChild('BodyVelocity')then
+local k=Instance.new('BodyVelocity')
+k.Name='BodyVelocity'
+k.MaxForce=Vector3.new(0,math.huge,0)
+k.Velocity=Vector3.zero
+k.Parent=j
+end
+
+if e.Character.Humanoid.Sit then
+e.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+end
+i=CFrame.new(i.x,math.max(i.y,5),i.z)
+
+if h.CaculateDistance(Vector3.new(11256,-2138,9888),i)<(h.CaculateDistance(i)-700)then
+local k=CFrame.new(-16269,23,1371)
+
+if h.CaculateDistance(k)>60 then
+return h.TweenToPostion(k)and task.wait(1)
+end
+f:RemoteFunction("SubmarineWorkerSpeak"):InvokeServer("TravelToSubmergedIsland")
+end
+
+local k=e.Character.HumanoidRootPart.CFrame
+e.Character.HumanoidRootPart.CFrame=CFrame.new(k.X,i.Y,k.Z)
+
+local l=h.CaculateDistance(e.Character.HumanoidRootPart.CFrame,i)
+getgenv().TweenInstance=b.TweenService:Create(e.Character.HumanoidRootPart,TweenInfo.new(
+l/(l<18 and 25 or 330),Enum.EasingStyle.Linear),{
+CFrame=i
+})
+getgenv().TweenInstance:Play()
+return
+end
+
+return h
+end
+
+function g.CombatHandler()
+local h=g.loadModule('FuncHandler')
+local i={}
+i.MobRegions={}
+
+for j,k in c.FortBuilderReplicatedSpawnPositionsFolder:GetChildren()do
+local l=k.Name or tostring(k)
+
+if not i.MobRegions[l]then
+i.MobRegions[l]={}
+end
+
+table.insert(i.MobRegions[l],k.CFrame)
+end
+
+function i.FreezeMob(j)
+if j:GetAttribute('Freeze')then
+return
+end
+j:SetAttribute('Freeze',true)
+
+j.HumanoidRootPart.CanCollide=false
+if not j.HumanoidRootPart:FindFirstChild('BodyVelocity')then
+local k=Instance.new('BodyVelocity',j.HumanoidRootPart)
+k.Name='BodyVelocity'
+k.MaxForce=Vector3.new(4000,4000,4000)
+k.Velocity=Vector3.zero
+end
+
+for k,l in j:GetDescendants()do
+if l:IsA('BasePart')or l:IsA('Part')then
+l.CanCollide=false
+end
+end
+end
+
+function i.GrabMobs(j)
+pcall(sethiddenproperty,game.Players.LocalPlayer,'SimulationRadius',math.huge)
+local k
+
+if e.Character.HumanoidRootPart.CFrame.Y>=2500 then
+return
+end
+
+local l,m,n=Vector3.zero,0,{}
+
+for o,p in workspace.Enemies:GetChildren()do
+if tostring(p)==j then
+local q=p:FindFirstChild('Humanoid')
+
+if q and q.Health>0 then
+local r=p:FindFirstChild('HumanoidRootPart')
+if r and getgenv().isnetworkowner(r)then
+if not k or h.CaculateDistance(k,r.Position)<250 then
+m=m+1
+l=l+r.Position
+k=k or r.Position
+p:SetAttribute('OriginalPosition',
+p:GetAttribute('OriginalPosition')or r.Position)
+table.insert(n,p)
+end
+end
+end
+end
+end
+
+local o=l/m
+if h.CaculateDistance(o,k)>400 then
+return
+end
+
+for p,q in n do
+q.HumanoidRootPart.CFrame=CFrame.new(o)
+pcall(i.FreezeMob,q)
+end
+end
+
+function i.GetMobSortedRange()
+local j={}
+
+for k,l in workspace.Enemies:GetChildren()do
+if not l then
+continue
+end
+
+if l:FindFirstChild('Humanoid')and l:FindFirstChild('HumanoidRootPart')and l.Humanoid.Health>
+0 then
+table.insert(j,l)
+end
+end
+
+for k,l in c:GetChildren()do
+if not l then
+continue
+end
+
+if l:FindFirstChild('Humanoid')and l:FindFirstChild('HumanoidRootPart')and l.Humanoid.Health>
+0 then
+table.insert(j,l)
+end
+end
+
+table.sort(j,function(k,l)
+return h.CaculateDistance(k.HumanoidRootPart.CFrame)<h.CaculateDistance(l.HumanoidRootPart.CFrame)
+end)
+
+return j
+end
+
+function i.SearchMobs(j)
+local k={}
+local l
+
+for m,n in i.GetMobSortedRange()do
+if table.find(j,n.Name)and n:FindFirstChild('Humanoid')and
+n.Humanoid.Health>0 then
+if(n:GetAttribute('FailureCount')or 0)<3 then
+l=true
+table.insert(k,n)
+end
+end
+end
+
+table.sort(k,function(m,n)
+return h.SortCFrame(m)<h.SortCFrame(n)
+end)
+
+if l then
+return k[1]
+end
+
+for m,n in j do
+local o=c:FindFirstChild(n)
+if o then
+return o
+end
+end
+
+return nil
+end
+
+local j=40
+lastChange=tick()
+function i.CaculateCircreDirection(k)
+if j>50000 then
+j=60
+end
+j=j+((tick()-lastChange)>.4 and 80 or 0)
+
+if tick()-lastChange>.4 then
+lastChange=tick()
+end
+
+local l=k+Vector3.new(math.cos(math.rad(j))*40,0,math.sin(math.rad(j))*40)
+return CFrame.new(h.RoundVector3Down(l.p))
+end
+
+LastFound=os.time()
+function i.AttackMobs(k)
+k=type(k)=='string'and{k}or k
+
+for l,m in(k)do
+local n=i.SearchMobs(k)
+
+if n then
+LastFound=os.time()
+local o,p=0,os.time()
+local q,r=0,os.time()
+while task.wait()do
+if _G.Stop then
+return
+end
+
+local s=n:FindFirstChild('Humanoid')
+local t=n:FindFirstChild('HumanoidRootPart')
+
+if not s or s.Health<=0 then
+break
+end
+
+h.TweenToPostion(i.CaculateCircreDirection(t.CFrame)+Vector3.new(0,35,0))
+
+if h.CaculateDistance(t.Position+Vector3.new(0,35,0))<150 then
+i.GrabMobs(n.Name or'')
+if n.Name~='Core'then
+if e.Data.Level.Value>100 and q>=120 and s.Health-
+s.MaxHealth==0 then
+_G.Stop=true
+e:Kick('Mob Health Stuck')
+end
+
+if(n:GetAttribute('FailureCount')or 0)>5 then
+e:Kick('Failed to attack')
+end
+
+if o>=360 and s.Health-s.MaxHealth==0 then
+o=0
+
+local u=n:GetAttribute('OldPosition')
+
+if u then
+n:SetPrimaryPartCFrame(CFrame.new(u))
+n:SetAttribute('IgnoreGrab',true)
+n:SetAttribute('FailureCount',(n:GetAttribute('FailureCount')or 0)+1)
+while h.CaculateDistance(n.HumanoidRootPart.CFrame,u)>6 and
+task.wait()do
+n.HumanoidRootPart.CFrame=(CFrame.new(u))
+end
+
+task.wait()
+
+return
+end
+end
+end
+
+h.EquipTool('Melee')
+if os.time()~=r then
+r=os.time()
+o=o+1
+q=q+1
+end
+
+if o>30 and n.Name~='Core'then
+break
+end
+end
+return
+end
+else
+if(os.time()-LastFound)>200 then
+print('Attack error')
+return
+end
+
+local o=i.MobRegions[m]
+
+if not o then
+local q=b.Workspace.Enemies:FindFirstChild(m)or c:FindFirstChild(m)
+
+o=q and{q:GetPrimaryPartCFrame().p}
+end
+
+if not o then
+print('get region error')
+return
+end
+
+local q
+
+if not o[MobIndexUwU]then
+MobIndexUwU=1
+
+end
+
+q=o[MobIndexUwU]
+
+local r=os.time()
+
+h.TweenToPostion(q+Vector3.new(0,35,35))
+task.wait()
+if h.CaculateDistance(q+Vector3.new(0,35,35))<15 then
+MobIndexUwU=MobIndexUwU+1
+end
+task.wait()
+end
+end
+end
+
+return i
+end
+
+
+local h=g.loadModule('FastAttackHandler')
+local i=g.loadModule('CombatHandler')
+h.Run()
+
+while task.wait()do
+if _G.Stop then
+local j=e.Character:WaitForChild('Head')
+if j:FindFirstChild('BodyVelocity')then
+j.BodyVelocity:Destroy()
+end
+continue
+end
+i.AttackMobs({'Cocoa Warrior','Chocolate Bar Battler','Sweet Thief','Candy Rebel'})
+end
