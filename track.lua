@@ -1,1 +1,1 @@
-print('f28h')
+print(1)
